@@ -3,8 +3,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const app = express();
 const { PrismaClient } = require("@prisma/client");
+const http = require("http");
 const prisma = new PrismaClient();
 const jwt_secret = "123random";
+const { webSocketServer } = require("ws");
 
 app.use(express.json());
 
@@ -88,7 +90,12 @@ app.post("/signin", async (req, res) => {
     }
 
     const token = jwt.sign({ email: user.email }, jwt_secret);
-    res.json({ token: token, message: "Signin successful" });
+    res.json({
+      token: token,
+      userId: user.id,
+      name: user.name,
+      message: "Signin successful",
+    });
   } catch (err) {
     console.log(err);
   }
@@ -175,7 +182,9 @@ app.get("/quiz/getall", Auth, async (req, res) => {
     res.json({ quizzes });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ message: "Internal server error, could not get the quizzes" });
+    res
+      .status(500)
+      .json({ message: "Internal server error, could not get the quizzes" });
   }
 });
 
@@ -404,6 +413,230 @@ app.delete("/quiz/:quizId", Auth, async (req, res) => {
     console.log(err);
     res.status(500).json({ message: "Could not delete quiz" });
   }
+});
+
+const server = http.createServer(app);
+const wss = new webSocketServer({ server });
+
+const rooms = {};
+
+wss.on("connection", (socket) => {
+  console.log("new webSocket client added");
+
+  socket.on("message", async (msg) => {
+    let data;
+    try {
+      data = JSON.parse(msg);
+    } catch (err) {
+      socket.send(JSON.stringify({ error: "Invalid JSON" }));
+      return;
+    }
+
+    if (data.type === "createRoom") {
+      let roomCode;
+      do {
+        roomCode = Math.floor(10000000 + Math.random() * 90000000).toString();
+      } while (rooms[roomCode]);
+
+      rooms[roomCode] = {
+        admin: socket,
+        clients: [],
+        currentQuestion: null,
+        submissions: {},
+      };
+
+      socket.role = "admin";
+      socket.room = roomCode;
+
+      let formattedCode = `${roomCode.slice(0, 4)} ${roomCode.slice(4)}`;
+      socket.send(
+        JSON.stringify({ type: "roomCreated", roomCode: formattedCode })
+      );
+
+      console.log(`Room ${formattedCode} created`);
+    }
+
+    if (data.type === "joinRoom") {
+      const { roomCode, userId, name } = data;
+      const room = rooms[roomCode];
+      if (!room) {
+        socket.send(JSON.stringify({ error: "Room not found" }));
+        return;
+      }
+
+      if (!room.clients.includes(socket)) {
+        room.clients.push(socket);
+      }
+
+      if(room.submissions[userId]){
+        socket.send(JSON.stringify({error:"user already joined with this ID"}));
+        return;
+      }
+      
+      room.submissions[userId] = { answers: [], score: 0, name: name };
+      socket.role = "client";
+      socket.room = roomCode;
+      socket.userId = userId;
+
+      socket.send(JSON.stringify({ type: "joinedRoom", roomCode }));
+
+      const participantNames = Object.values(room.submissions).map(
+        (s) => s.name
+      );
+
+      room.admin.send(
+        JSON.stringify({
+          type: "participantUpdate",
+          participants: participantNames,
+        })
+      );
+    }
+
+    if (data.type === "nextQuestion") {
+      const room = rooms[socket.room];
+      if (!room || socket.role != "admin") {
+        return;
+      }
+
+      let question = await prisma.question.findFirst({
+        where: { id: data.questionId },
+        include: { options: true },
+      });
+
+      if (!question) {
+        socket.send(JSON.stringify({ error: "Invalid question Id" }));
+        return;
+      }
+
+      const correctOption = question.options.find((opt) => opt.isCorrect);
+
+      if (!correctOption) {
+        socket.send(JSON.stringify({ error: "No correct answer found" }));
+        return;
+      }
+
+      room.currentQuestion = {
+        id: question.id,
+        correctOptionId: correctOption.id,
+        points: question.points ?? 1,
+      };
+
+      room.clients.forEach((client) => {
+        client.send(
+          JSON.stringify({
+            type: "newQuestion",
+            question: {
+              id: question.id,
+              text: question.text,
+              options: question.options.map((opt) => ({
+                id: opt.id,
+                text: opt.text,
+              })),
+            },
+          })
+        );
+      });
+    }
+
+    if (data.type === "submitAnswer") {
+      const room = rooms[socket.room];
+      const userId = socket.userId;
+      if (!room || socket.role != "client") {
+        socket.send(
+          JSON.stringify({ error: "Not authorized or room not found" })
+        );
+        return;
+      }
+
+      const { questionId, selectedOption } = data;
+
+      if (!room.currentQuestion || room.currentQuestion.id !== questionId) {
+        socket.send(JSON.stringify({ error: "Question mismatch" }));
+        return;
+      }
+
+      let isCorrect = selectedOption === room.currentQuestion.correctOptionId;
+      if (isCorrect) {
+        room.submissions[userId].score += room.currentQuestion.points;
+      }
+
+      room.submissions[userId].answers.push({
+        questionId,
+        selectedOption,
+        correct: isCorrect,
+      });
+
+      socket.send(
+        JSON.stringify({
+          type: "answerResult",
+          correct: isCorrect,
+          score: room.submissions[userId].score,
+        })
+      );
+
+      console.log(
+        `User ${userId} answered Q:${questionId} -> ${selectedOption} (${
+          isCorrect ? "correct" : "wrong"
+        })`
+      );
+    }
+
+    if (data.type === "showLeaderboard") {
+      const room = rooms[socket.room];
+      if (socket.role !== "admin") {
+        return;
+      }
+
+      const leaderboard = Object.entries(room.submissions).map(
+        ([userId, sub]) => ({
+          userId,
+          name: sub.name,
+          score: sub.score,
+        })
+      );
+
+      room.clients.forEach((client) => {
+        client.send(
+          JSON.stringify({
+            type: "leaderboard",
+            leaderboard,
+          })
+        );
+      });
+
+      socket.send(
+        JSON.stringify({
+          type: "leaderboard",
+          leaderboard,
+        })
+      );
+    }
+  });
+
+  socket.on("close", () => {
+    const roomCode = socket.room;
+    if (!roomCode) {
+      return;
+    }
+
+    const room = rooms[roomCode];
+    if (!room) {
+      return;
+    }
+
+    if (socket.role === "admin") {
+      room.clients.forEach((client) => {
+        if (client.readyState === 1) {
+          client.send(JSON.stringify({ type: "roomClosed" }));
+          client.close();
+        }
+      });
+
+      delete rooms[roomCode];
+    } else {
+      room.clients = room.clients.filter((c) => c !== socket);
+    }
+  });
 });
 
 app.listen(3000, () => {
