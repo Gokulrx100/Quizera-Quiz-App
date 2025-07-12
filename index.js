@@ -259,24 +259,24 @@ app.post("/quiz/:quizId/submit", Auth, async (req, res) => {
     }
     let score = 0;
     let total = answers.length;
-    for (const ans of answers) {
-      const question = quiz.questions.find((q) => q.id == ans.questionId);
-      const selectedOption = question.options.find(
-        (op) => op.id == ans.selectedOption
-      );
-      if (selectedOption?.isCorrect) {
-        score += question.points;
-      }
-    }
     // for (const ans of answers) {
     //   const question = quiz.questions.find((q) => q.id == ans.questionId);
     //   const selectedOption = question.options.find(
-    //     (op) => op.text == ans.selectedOption
+    //     (op) => op.id == ans.selectedOption
     //   );
     //   if (selectedOption?.isCorrect) {
     //     score += question.points;
     //   }
     // }
+    for (const ans of answers) {
+      const question = quiz.questions.find((q) => q.id == ans.questionId);
+      const selectedOption = question.options.find(
+        (op) => op.text == ans.selectedOption
+      );
+      if (selectedOption?.isCorrect) {
+        score += question.points;
+      }
+    }
 
     await prisma.submission.create({
       data: {
