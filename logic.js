@@ -433,6 +433,7 @@ wss.on("connection", (socket) => {
     }
 
     if (data.type === "createRoom") {
+      const { quizId } = data;
       let roomCode;
       do {
         roomCode = Math.floor(10000000 + Math.random() * 90000000).toString();
@@ -440,9 +441,10 @@ wss.on("connection", (socket) => {
 
       rooms[roomCode] = {
         admin: socket,
-        clients: [],
+        clients: {},
         currentQuestion: null,
         submissions: {},
+        quizId: quizId,
       };
 
       socket.role = "admin";
@@ -464,21 +466,31 @@ wss.on("connection", (socket) => {
         return;
       }
 
-      if (!room.clients.includes(socket)) {
-        room.clients.push(socket);
+      if (room.submissions[userId]) {
+        console.log(`User ${userId} is reconnecting`);
+      } else {
+        room.submissions[userId] = { answers: [], score: 0, name: name };
       }
 
-      if(room.submissions[userId]){
-        socket.send(JSON.stringify({error:"user already joined with this ID"}));
-        return;
-      }
-      
-      room.submissions[userId] = { answers: [], score: 0, name: name };
+      room.clients[userId] = socket;
       socket.role = "client";
       socket.room = roomCode;
       socket.userId = userId;
 
       socket.send(JSON.stringify({ type: "joinedRoom", roomCode }));
+
+      if (room.currentQuestion) {
+        socket.send(
+          JSON.stringify({
+            type: "newQuestion",
+            question: {
+              id: room.currentQuestion.id,
+              text: room.currentQuestion.text,
+              options: room.currentQuestion.options,
+            },
+          })
+        );
+      }
 
       const participantNames = Object.values(room.submissions).map(
         (s) => s.name
@@ -515,24 +527,31 @@ wss.on("connection", (socket) => {
         return;
       }
 
+      const duration=40*1000;
+      room.currentQuestionDeadline=Date.now()+duration;
+
       room.currentQuestion = {
         id: question.id,
         correctOptionId: correctOption.id,
         points: question.points ?? 1,
+        text: question.text,
+        options: question.options.map((opt) => ({
+          id: opt.id,
+          text: opt.text,
+        })),
       };
 
-      room.clients.forEach((client) => {
+      Object.values(room.clients).forEach((client) => {
         client.send(
           JSON.stringify({
             type: "newQuestion",
             question: {
               id: question.id,
               text: question.text,
-              options: question.options.map((opt) => ({
-                id: opt.id,
-                text: opt.text,
-              })),
+              options: room.currentQuestion.options,
             },
+            deadline: room.currentQuestionDeadline,
+            duration:duration/1000
           })
         );
       });
@@ -552,6 +571,20 @@ wss.on("connection", (socket) => {
 
       if (!room.currentQuestion || room.currentQuestion.id !== questionId) {
         socket.send(JSON.stringify({ error: "Question mismatch" }));
+        return;
+      }
+
+      if(Date.now()>room.currentQuestionDeadline){
+        socket.send(JSON.stringify({error:"Time's up"}));
+        return;
+      }
+
+      if (
+        room.submissions[userId].answers.find((a) => a.questionId === questionId)
+      ) {
+        socket.send(
+          JSON.stringify({ error: "Already answered this question" })
+        );
         return;
       }
 
@@ -595,7 +628,20 @@ wss.on("connection", (socket) => {
         })
       );
 
-      room.clients.forEach((client) => {
+      await Promise.all(
+        Object.entries(room.submissions).map(([userId, sub]) => {
+          return prisma.submission.create({
+            data: {
+              userId: userId,
+              quizId: room.quizId,
+              answers: sub.answers,
+              score: sub.score,
+            },
+          });
+        })
+      );
+
+      Object.values(room.clients).forEach((client) => {
         client.send(
           JSON.stringify({
             type: "leaderboard",
@@ -625,7 +671,7 @@ wss.on("connection", (socket) => {
     }
 
     if (socket.role === "admin") {
-      room.clients.forEach((client) => {
+      Object.values(room.clients).forEach((client) => {
         if (client.readyState === 1) {
           client.send(JSON.stringify({ type: "roomClosed" }));
           client.close();
@@ -634,11 +680,14 @@ wss.on("connection", (socket) => {
 
       delete rooms[roomCode];
     } else {
-      room.clients = room.clients.filter((c) => c !== socket);
+      const userId = socket.userId;
+      if (userId && room.clients[userId] === socket) {
+        delete room.clients[userId];
+      }
     }
   });
 });
 
-app.listen(3000, () => {
+server.listen(3000, () => {
   console.log("server running at port 3000");
 });
