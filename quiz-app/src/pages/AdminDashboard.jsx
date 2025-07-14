@@ -20,6 +20,11 @@ const AdminDashboard = () => {
           },
         });
         setQuizzes(response.data.quizzes);
+        if (!response.data.quizzes || response.data.quizzes.length === 0) {
+          setMessage("No quizzes yet");
+        } else {
+          setMessage("");
+        }
       } catch (err) {
         console.error(err);
         setMessage("Failed to fetch quizzes");
@@ -45,12 +50,12 @@ const AdminDashboard = () => {
       <Navbar />
 
       <div className="flex flex-col items-center p-8">
-        <h2 className="text-3xl font-bold mb-8">Your Quizzes</h2>
+        <h2 className="text-3xl font-bold mt-10 mb-15">Your Quizzes</h2>
 
         {loading && <p>Loading quizzes...</p>}
         {message && <p className="text-red-600">{message}</p>}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 w-full max-w-5xl">
           {quizzes.map((quiz) => (
             <div
               key={quiz.id}

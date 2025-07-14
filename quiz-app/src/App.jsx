@@ -1,5 +1,4 @@
 import { BrowserRouter,Routes, Route, Navigate } from "react-router"
-
 import Signup from "./pages/Signup"
 import Signin from "./pages/Signin"
 import Profile from "./pages/Profile"
@@ -8,6 +7,7 @@ import Room from "./pages/Room"
 import QuizEditor from "./pages/QuizEditor"
 import ErrorPage from "./pages/ErrorPage"
 import JoinQuiz from "./pages/JoinQuiz"
+
 function App() {
 
   return (
