@@ -29,9 +29,9 @@ const Signin = () => {
       localStorage.setItem("name",response.data.name);
 
       if (response.data.role === "ADMIN") {
-        navigate("/dashboard");
+        navigate("/admin");
       } else {
-        navigate("/profile");
+        navigate("/join-quiz");
       }
     } catch (err) {
       console.log(err);

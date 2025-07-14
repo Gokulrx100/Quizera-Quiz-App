@@ -51,7 +51,7 @@ const JoinQuiz = () => {
             </p>
           )}
 
-          <label className="block mb-2 font-semibold text-lg">
+          <label className="block mb-2 font-semibold text-lg text-center">
             Enter Room Code
           </label>
           <input

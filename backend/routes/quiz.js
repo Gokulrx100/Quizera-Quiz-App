@@ -66,7 +66,7 @@ router.post("/", Auth, async (req, res) => {
 router.get("/getall", Auth, async (req, res) => {
   try {
     const quizzes = await prisma.quiz.findMany({
-      where: { deleted: false },
+      where: { deleted: false, createdById: req.user.id },
       select: {
         id: true,
         title: true,
@@ -98,7 +98,7 @@ router.get("/:quizId", Auth, async (req, res) => {
 
     if (!quiz) {
       return res
-        .status(401)
+        .status(404)
         .json({ message: "invalid quizId, could not fetch quiz" });
     }
 
@@ -108,9 +108,11 @@ router.get("/:quizId", Auth, async (req, res) => {
       questions: quiz.questions.map((q) => ({
         id: q.id,
         title: q.text,
+        points:q.points,
         options: q.options.map((opt) => ({
           id: opt.id,
           text: opt.text,
+          isCorrect:opt.isCorrect
         })),
       })),
     };
@@ -150,6 +152,7 @@ router.put("/:quizId", Auth, async (req, res) => {
     if (req.user.role !== "ADMIN") {
       return res.status(401).json({ message: "Only admin can update quizzes" });
     }
+
     const quizId = req.params.quizId;
     const { title, questions } = req.body;
 
@@ -164,43 +167,30 @@ router.put("/:quizId", Auth, async (req, res) => {
 
     await prisma.quiz.update({
       where: { id: quizId },
-      data: { title: title },
+      data: { title },
+    });
+
+    const incomingQuestionIds = questions.filter(q => q.id).map(q => q.id);
+    await prisma.question.deleteMany({
+      where: {
+        quizId: quizId,
+        id: { notIn: incomingQuestionIds },
+      },
     });
 
     await Promise.all(
       questions.map(async (q) => {
-        if (q.id) {
+        let questionId = q.id;
+
+        if (questionId) {
+          // Update question
           await prisma.question.update({
-            where: { id: q.id },
+            where: { id: questionId },
             data: {
               text: q.text,
               points: q.points ?? 1,
             },
           });
-
-          if (q.options) {
-            await Promise.all(
-              q.options.map(async (opt) => {
-                if (opt.id) {
-                  await prisma.option.update({
-                    where: { id: opt.id },
-                    data: {
-                      text: opt.text,
-                      isCorrect: opt.isCorrect,
-                    },
-                  });
-                } else {
-                  await prisma.option.create({
-                    data: {
-                      text: opt.text,
-                      isCorrect: opt.isCorrect,
-                      questionId: q.id,
-                    },
-                  });
-                }
-              })
-            );
-          }
         } else {
           const newQuestion = await prisma.question.create({
             data: {
@@ -209,20 +199,38 @@ router.put("/:quizId", Auth, async (req, res) => {
               quizId: quizId,
             },
           });
-          if (q.options) {
-            await Promise.all(
-              q.options.map(async (opt) => {
-                await prisma.option.create({
-                  data: {
-                    text: opt.text,
-                    isCorrect: opt.isCorrect,
-                    questionId: newQuestion.id,
-                  },
-                });
-              })
-            );
-          }
+          questionId = newQuestion.id;
         }
+
+        const incomingOptionIds = q.options.filter(opt => opt.id).map(opt => opt.id);
+        await prisma.option.deleteMany({
+          where: {
+            questionId: questionId,
+            id: { notIn: incomingOptionIds },
+          },
+        });
+
+        await Promise.all(
+          q.options.map(async (opt) => {
+            if (opt.id) {
+              await prisma.option.update({
+                where: { id: opt.id },
+                data: {
+                  text: opt.text,
+                  isCorrect: opt.isCorrect,
+                },
+              });
+            } else {
+              await prisma.option.create({
+                data: {
+                  text: opt.text,
+                  isCorrect: opt.isCorrect,
+                  questionId: questionId,
+                },
+              });
+            }
+          })
+        );
       })
     );
     res.json({ message: "Quiz updated successfully" });
@@ -231,6 +239,7 @@ router.put("/:quizId", Auth, async (req, res) => {
     res.status(500).json({ message: "Could not update quiz" });
   }
 });
+
 
 router.delete("/:quizId", Auth, async (req, res) => {
   try {

@@ -1,6 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import axios from "axios";
 
 const Signup = () => {
   const navigate = useNavigate();

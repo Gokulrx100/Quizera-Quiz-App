@@ -11,11 +11,25 @@ const Navbar = () => {
     navigate("/signin");
   };
 
+  const handleHomeClick = (e) => {
+    e.preventDefault();
+    if (role === "ADMIN") {
+      navigate("/admin");
+    } else if (role === "USER") {
+      navigate("/join-quiz");
+    } else {
+      navigate("/signin");
+    }
+  };
+
   return (
     <nav className="bg-blue-600 text-white px-6 py-3 flex justify-between items-center shadow-md">
-      <Link to="/" className="text-lg font-bold hover:text-blue-200">
+      <a
+        onClick={handleHomeClick}
+        className="text-lg font-bold hover:text-blue-200 cursor-pointer"
+      >
         Quiz App
-      </Link>
+      </a>
 
       <div className="flex items-center space-x-9">
         <span>Hi, {name}</span>

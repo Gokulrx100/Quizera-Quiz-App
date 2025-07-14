@@ -25,6 +25,7 @@ function handleCreateRoom(socket, data, rooms) {
   console.log(`Room ${formattedCode} created`);
 }
 
+
 function handleJoinRoom(socket, data, rooms) {
   const { roomCode, userId, name } = data;
   const room = rooms[roomCode];
@@ -75,6 +76,7 @@ function handleJoinRoom(socket, data, rooms) {
     })
   );
 }
+
 
 async function handleNextQuestion(socket, data, rooms) {
   const room = rooms[socket.room];
@@ -129,6 +131,7 @@ async function handleNextQuestion(socket, data, rooms) {
   });
 }
 
+
 function handleSubmitAnswer(socket, data, rooms) {
   const room = rooms[socket.room];
   const userId = socket.userId;
@@ -182,6 +185,7 @@ function handleSubmitAnswer(socket, data, rooms) {
   );
 }
 
+
 async function handleShowLeaderboard(socket, data, rooms) {
   const room = rooms[socket.room];
   if (socket.role !== "admin") {
@@ -224,6 +228,7 @@ async function handleShowLeaderboard(socket, data, rooms) {
   );
 }
 
+
 function handleEndQuiz(socket, data, rooms) {
   const room = rooms[socket.room];
   if (!room || socket.role !== "admin") {
@@ -243,6 +248,7 @@ function handleEndQuiz(socket, data, rooms) {
 
   socket.close();
 }
+
 
 function handleDisconnect(socket, rooms) {
   const roomCode = socket.room;
@@ -271,6 +277,7 @@ function handleDisconnect(socket, rooms) {
     }
   }
 }
+
 
 module.exports = {
   handleCreateRoom,

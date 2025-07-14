@@ -49,7 +49,7 @@ model Option {
   id          String       @id @default(uuid())
   text        String
   isCorrect   Boolean 
-  question    Question @relation(fields: [questionId], references: [id])
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   questionId  String
 }
 
