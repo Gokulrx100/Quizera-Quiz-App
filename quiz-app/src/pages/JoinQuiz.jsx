@@ -1,13 +1,12 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import Navbar from "../components/Navbar";
-import { SocketContext } from "../Contexts/SocketContext";
+import { useNavigate } from "react-router";
 
 const JoinQuiz = () => {
   const [roomCode, setRoomCode] = useState("");
   const [message, setMessage] = useState("");
 
-  const socketRef = useContext(SocketContext);
-  const socket = socketRef.current;
+  const navigate = useNavigate();
 
   const name = localStorage.getItem("name");
   const userId = localStorage.getItem("userId");
@@ -19,20 +18,7 @@ const JoinQuiz = () => {
       setMessage("Please enter a room code.");
       return;
     }
-
-    if (!socket || socket.readyState !== 1) {
-      setMessage("WebSocket not connected.");
-      return;
-    }
-
-    const payload = {
-      type: "joinRoom",
-      roomCode: roomCode.trim(),
-      userId,
-      name,
-    };
-
-    socket.send(JSON.stringify(payload));
+    navigate(`/room/${roomCode.trim()}`);
   };
 
   return (
