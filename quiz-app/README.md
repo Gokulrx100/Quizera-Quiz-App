@@ -1,4 +1,4 @@
-# Quiz App Frontend
+# Pollara Quiz App Frontend
 
 A modern, real-time quiz application built with React. Users can join quiz rooms, answer questions live, and see instant feedback and leaderboards. Admins can create, edit, and run quizzes.
 
