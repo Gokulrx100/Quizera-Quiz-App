@@ -28,7 +28,9 @@ function handleCreateRoom(socket, data, rooms) {
 
 function handleJoinRoom(socket, data, rooms) {
   const { roomCode, userId, name } = data;
-  const room = rooms[roomCode];
+
+  const cleanRoomCode=roomCode.replace(/\s/g,"");
+  const room = rooms[cleanRoomCode];
   if (!room) {
     socket.send(JSON.stringify({ error: "Room not found" }));
     return;
@@ -49,10 +51,10 @@ function handleJoinRoom(socket, data, rooms) {
 
   room.clients[userId] = socket;
   socket.role = "client";
-  socket.room = roomCode;
+  socket.room = cleanRoomCode;
   socket.userId = userId;
 
-  socket.send(JSON.stringify({ type: "joinedRoom", roomCode }));
+  socket.send(JSON.stringify({ type: "joinedRoom", roomCode:cleanRoomCode }));
 
   if (room.currentQuestion) {
     socket.send(

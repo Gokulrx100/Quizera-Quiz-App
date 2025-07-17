@@ -1,11 +1,12 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import Navbar from "../components/Navbar";
+import { useSocket } from "../Contexts/SocketContext";
 
 const Room = () => {
   const { roomCode } = useParams();
   const navigate = useNavigate();
-  const socketRef = useRef(null);
+  const { socketRef, safeSend } = useSocket();
 
   const [message, setMessage] = useState("Connecting to room...");
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -19,103 +20,72 @@ const Room = () => {
     const name = localStorage.getItem("name");
 
     if (!userId || !name) {
-      alert("No user information found. Please sign in again.");
+      alert("No user info found. Please sign in.");
       navigate("/signin");
       return;
     }
 
-    console.log("Connecting with:", { userId, name });
+    const socket = socketRef.current;
+    if (!socket) return;
 
-    const socket = new WebSocket("ws://localhost:3000");
-    socketRef.current = socket;
+    console.log("[Room] Connecting with:", { userId, name });
 
-    socket.onopen = () => {
-      console.log("WebSocket connected");
-      socket.send(
-        JSON.stringify({
-          type: "joinRoom",
-          roomCode: roomCode.trim(),
-          name,
-          userId,
-        })
-      );
-    };
+    safeSend({
+      type: "joinRoom",
+      roomCode: roomCode.trim(),
+      name,
+      userId,
+    });
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log("Message from server:", data);
+      console.log("[Room] Server says:", data);
 
       if (data.error) {
         alert(data.error);
-        if (
-          data.error === "Not authorized or room not found"
-        ) {
-          navigate("/join-quiz");
-        }
+        navigate("/join-quiz");
         return;
       }
 
       switch (data.type) {
         case "joinedRoom":
-          setMessage(
-            `Joined Room: ${data.roomCode}. Waiting for the next question...`
-          );
+          setMessage(`Joined Room: ${data.roomCode}. Waiting for next question...`);
           break;
-
         case "newQuestion":
           setCurrentQuestion(data.question);
           setSelectedOption(null);
           setAnswerResult("");
           setMessage("");
           break;
-
         case "answerResult":
           setScore(data.score);
           setAnswerResult(data.correct ? "✅ Correct!" : "❌ Wrong!");
           break;
-
         case "leaderboard":
           setLeaderboard(data.leaderboard);
           break;
-
         case "roomClosed":
-          alert("Quiz ended. Redirecting to join page.");
+          alert("Quiz ended.");
           navigate("/join-quiz");
           break;
-
         default:
-          console.warn("Unknown message type:", data);
+          console.warn("Unknown:", data);
       }
     };
-
-    socket.onclose = () => {
-      console.log("WebSocket disconnected");
-    };
-
-    return () => {
-      socket.close();
-    };
-  }, [roomCode, navigate]);
+  }, [socketRef, roomCode, navigate, safeSend]);
 
   const submitAnswer = () => {
-    if (!selectedOption) {
-      alert("Please select an option.");
-      return;
-    }
-
-    socketRef.current.send(
-      JSON.stringify({
-        type: "submitAnswer",
-        questionId: currentQuestion.id,
-        selectedOption: selectedOption,
-      })
-    );
+    if (!selectedOption) return alert("Select an option!");
+    safeSend({
+      type: "submitAnswer",
+      questionId: currentQuestion.id,
+      selectedOption,
+    });
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
       <Navbar />
-
       <div className="flex flex-col items-center p-8">
         <h2 className="text-3xl font-bold mb-4">Room: {roomCode}</h2>
         <p className="text-lg mb-4">{message}</p>
@@ -123,7 +93,6 @@ const Room = () => {
         {currentQuestion && (
           <div className="bg-white p-6 rounded-xl shadow max-w-xl w-full mb-6">
             <h3 className="text-xl font-bold mb-4">{currentQuestion.text}</h3>
-
             <div className="space-y-2">
               {currentQuestion.options.map((opt) => (
                 <label key={opt.id} className="flex items-center gap-2">

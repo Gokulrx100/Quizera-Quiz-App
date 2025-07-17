@@ -158,7 +158,7 @@ const QuizEditor = ({ mode }) => {
 
               <input
                 type="text"
-                value={q.text}
+                value={q.title}
                 onChange={(e) => {
                   const updated = [...questions];
                   updated[qIndex].text = e.target.value;

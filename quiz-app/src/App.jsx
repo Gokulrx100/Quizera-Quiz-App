@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router";
+// App.jsx
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router";
 import Signup from "./pages/Signup";
 import Signin from "./pages/Signin";
 import Profile from "./pages/Profile";
@@ -7,7 +8,16 @@ import Room from "./pages/Room";
 import QuizEditor from "./pages/QuizEditor";
 import ErrorPage from "./pages/ErrorPage";
 import JoinQuiz from "./pages/JoinQuiz";
+import AdminRoom from "./pages/adminRoom";
 import { SocketProvider } from "./Contexts/SocketContext";
+
+function SocketRoutesWrapper() {
+  return (
+    <SocketProvider>
+      <Outlet />
+    </SocketProvider>
+  );
+}
 
 function App() {
   return (
@@ -17,20 +27,16 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/profile" element={<Profile />} />
-
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/create-quiz" element={<QuizEditor mode="create" />} />
         <Route path="/edit-quiz/:quizId" element={<QuizEditor mode="edit" />} />
-
         <Route path="/join-quiz" element={<JoinQuiz />} />
-        <Route
-          path="/room/:roomCode"
-          element={
-            <SocketProvider>
-              <Room />
-            </SocketProvider>
-          }
-        />
+
+        <Route element={<SocketRoutesWrapper />}>
+          <Route path="/room/:roomCode" element={<Room />} />
+          <Route path="/adminroom/:quizId" element={<AdminRoom />} />
+        </Route>
+
         <Route path="*" element={<ErrorPage />} />
       </Routes>
     </BrowserRouter>

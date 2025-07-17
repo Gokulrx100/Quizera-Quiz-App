@@ -42,7 +42,8 @@ const AdminDashboard = () => {
 
   const handleStart = (quizId) => {
     console.log(`Start quiz ${quizId}`);
-    // TODO: Connect to WebSocket and create room here!
+    localStorage.setItem("quizId",quizId);
+    navigate(`/adminroom/${quizId}`);
   };
 
   return (

@@ -1,30 +1,38 @@
-import React, { createContext, useRef, useEffect } from "react";
+import React, { createContext, useContext, useRef } from "react";
 
-export const SocketContext = createContext();
+const SocketContext = createContext(null);
+
+export const useSocket = () => useContext(SocketContext);
 
 export const SocketProvider = ({ children }) => {
   const socketRef = useRef(null);
+  const queue = useRef([]);
 
-  useEffect(() => {
-    socketRef.current = new WebSocket("ws://localhost:3000");
+  if (!socketRef.current) {
+    const socket = new WebSocket("ws://localhost:3000/");
+    socketRef.current = socket;
 
-    socketRef.current.onopen = () => {
-      console.log("WebSocket connected");
+    socket.onopen = () => {
+      console.log("[Socket] Connected");
+      queue.current.forEach((msg) => socket.send(JSON.stringify(msg)));
+      queue.current = [];
     };
 
-    socketRef.current.onclose = () => {
-      console.log("WebSocket disconnected");
-    };
+    socket.onclose = () => console.log("[Socket] Disconnected");
+  }
 
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.close();
-      }
-    };
-  }, []);
+  const safeSend = (msg) => {
+    const socket = socketRef.current;
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(msg));
+    } else {
+      console.log("[Socket] Queued message until open");
+      queue.current.push(msg);
+    }
+  };
 
   return (
-    <SocketContext.Provider value={socketRef}>
+    <SocketContext.Provider value={{ socketRef, safeSend }}>
       {children}
     </SocketContext.Provider>
   );
