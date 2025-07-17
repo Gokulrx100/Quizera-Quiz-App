@@ -26,9 +26,9 @@ const Navbar = () => {
     <nav className="bg-blue-600 text-white px-6 py-3 flex justify-between items-center shadow-md">
       <a
         onClick={handleHomeClick}
-        className="text-lg font-bold hover:text-blue-200 cursor-pointer"
+        className="text-2xl font-bold hover:text-blue-200 cursor-pointer"
       >
-        Quiz App
+        Pollara
       </a>
 
       <div className="flex items-center space-x-9">

@@ -1,4 +1,5 @@
 const express = require("express");
+const helmet = require("helmet");
 const http = require("http");
 const cors = require("cors");
 //wsServer
@@ -9,6 +10,7 @@ const profileRouter = require("./routes/profile");
 const authRouter = require("./routes/authRoutes");
 
 const app = express();
+app.use(helmet());
 
 app.use(cors());
 app.use(express.json());
