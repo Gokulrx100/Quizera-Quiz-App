@@ -4,7 +4,7 @@ import Signup from "./pages/Signup";
 import Signin from "./pages/Signin";
 import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
-import Room from "./pages/Room";
+import UserRoom from "./pages/UserRoom";
 import QuizEditor from "./pages/QuizEditor";
 import ErrorPage from "./pages/ErrorPage";
 import JoinQuiz from "./pages/JoinQuiz";
@@ -33,7 +33,7 @@ function App() {
         <Route path="/join-quiz" element={<JoinQuiz />} />
 
         <Route element={<SocketRoutesWrapper />}>
-          <Route path="/room/:roomCode" element={<Room />} />
+          <Route path="/room/:roomCode" element={<UserRoom />} />
           <Route path="/adminroom/:quizId" element={<AdminRoom />} />
         </Route>
 

@@ -131,6 +131,14 @@ async function handleNextQuestion(socket, data, rooms) {
       })
     );
   });
+  
+  setTimeout(() => {
+    Object.values(room.clients).forEach((client) => {
+      if (client.readyState === 1) {
+        client.send(JSON.stringify({ type: "timeUp" }));
+      }
+    });
+  }, duration);
 }
 
 
@@ -150,7 +158,7 @@ function handleSubmitAnswer(socket, data, rooms) {
   }
 
   if (Date.now() > room.currentQuestionDeadline) {
-    socket.send(JSON.stringify({ error: "Time's up" }));
+    socket.send(JSON.stringify({type:"timeUp"}));
     return;
   }
 

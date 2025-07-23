@@ -28,7 +28,7 @@ A modern, real-time quiz application built with React. Users can join quiz rooms
 - **Vite** (Build tool)
 - **React Context API** (State management)
 
----
+--
 
 ## 📋 Prerequisites
 

@@ -28,7 +28,7 @@ const Navbar = () => {
         onClick={handleHomeClick}
         className="text-2xl font-bold hover:text-blue-200 cursor-pointer"
       >
-        Pollara
+        Quizera
       </a>
 
       <div className="flex items-center space-x-9">
