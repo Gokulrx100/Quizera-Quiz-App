@@ -1,6 +1,6 @@
-# Pollara Quiz App Backend
+# Quizera Quiz App Backend
 
-This is the backend for Pollara quiz app, providing REST API endpoints and real-time WebSocket communication.
+This is the backend for Quizera quiz app, providing REST API endpoints and real-time WebSocket communication.
 
 ---
 
