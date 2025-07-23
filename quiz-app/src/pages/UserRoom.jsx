@@ -15,7 +15,9 @@ const UserRoom = () => {
   const [score, setScore] = useState(0);
   const [leaderboard, setLeaderboard] = useState([]);
   const [isTimeUp, setIsTimeUp] = useState(false);
-  const [hasSubmitted, setHasSubmitted] = useState(false); 
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [totalTime, setTotalTime] = useState(0); 
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -60,9 +62,15 @@ const UserRoom = () => {
           setMessage("");
           setIsTimeUp(false);
           setHasSubmitted(false);
+          if (data.deadline) {
+            const timeRemaining = Math.max(0, Math.floor((data.deadline - Date.now()) / 1000));
+            setTimeLeft(timeRemaining);
+            setTotalTime(data.duration); 
+          }
           break;
         case "timeUp":
           setIsTimeUp(true);
+          setTimeLeft(0);
           break;
         case "answerResult":
           setScore(data.score);
@@ -82,6 +90,22 @@ const UserRoom = () => {
     };
   }, [socketRef, roomCode, navigate, safeSend]);
 
+  useEffect(() => {
+    if (timeLeft > 0 && !hasSubmitted && !isTimeUp) {
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            setIsTimeUp(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [timeLeft, hasSubmitted, isTimeUp]);
+
   const submitAnswer = () => {
     if (!selectedOption || isTimeUp || hasSubmitted) return;
     safeSend({
@@ -89,10 +113,24 @@ const UserRoom = () => {
       questionId: currentQuestion.id,
       selectedOption,
     });
-    setHasSubmitted(true); 
+    setHasSubmitted(true);
   };
 
-  const isDisabled = isTimeUp || hasSubmitted; 
+  const isDisabled = isTimeUp || hasSubmitted;
+
+  const getTimerColor = () => {
+    const percentage = (timeLeft / totalTime) * 100;
+    if (percentage > 50) return "text-green-700 bg-green-100 border-green-200";
+    if (percentage > 20) return "text-yellow-700 bg-yellow-100 border-yellow-200";
+    return "text-red-700 bg-red-100 border-red-200";
+  };
+
+  const getProgressColor = () => {
+    const percentage = (timeLeft / totalTime) * 100;
+    if (percentage > 50) return "bg-green-500";
+    if (percentage > 20) return "bg-yellow-500";
+    return "bg-red-500";
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -112,6 +150,32 @@ const UserRoom = () => {
             </div>
           </div>
         </div>
+
+        {/* Timer */}
+        {currentQuestion && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-gray-200/50 w-full max-w-2xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-500 text-white text-sm font-bold flex items-center justify-center">
+                  ⏱️
+                </div>
+                <span className="text-lg font-semibold text-gray-800">Time Remaining</span>
+              </div>
+              
+              <div className={`px-4 py-2 rounded-full border font-bold text-lg ${getTimerColor()}`}>
+                {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+              </div>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all duration-1000 ${getProgressColor()}`}
+                style={{ width: `${Math.max(0, (timeLeft / totalTime) * 100)}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
 
         {/* Current Question */}
         {currentQuestion && (
