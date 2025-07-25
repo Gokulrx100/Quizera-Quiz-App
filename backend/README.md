@@ -77,7 +77,7 @@ backend/
 │   └── wsHandlers.js     # WebSocket message handlers
 ├── logic.js              # Main server entry point
 └── package.json
-
+```
 
 ## 🔗 API Endpoints
 
