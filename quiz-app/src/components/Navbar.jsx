@@ -41,11 +41,28 @@ const Navbar = () => {
         </Link>
 
         {role === "ADMIN" && (
+          <>
+            <Link
+              to="/create-quiz"
+              className="hover:text-blue-200 transition-colors duration-200"
+            >
+              Create Quiz
+            </Link>
+            <Link
+              to="/join-quiz"
+              className="hover:text-blue-200 transition-colors duration-200"
+            >
+              Join Quiz
+            </Link>
+          </>
+        )}
+
+        {role === "USER" && (
           <Link
-            to="/create-quiz"
+            to="/join-quiz"
             className="hover:text-blue-200 transition-colors duration-200"
           >
-            Create Quiz
+            Join Quiz
           </Link>
         )}
 

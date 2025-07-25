@@ -36,16 +36,7 @@ function handleJoinRoom(socket, data, rooms) {
     return;
   }
 
-  if (room.submissions[userId]) {
-    console.log(`User ${userId} is reconnecting`);
-    room.admin.send(
-      JSON.stringify({
-        type: "userReconnected",
-        userId,
-        name: room.submissions[userId].name,
-      })
-    );
-  } else {
+  if(!room.submissions[userId]){
     room.submissions[userId] = { answers: [], score: 0, name: name };
   }
 
@@ -57,6 +48,7 @@ function handleJoinRoom(socket, data, rooms) {
   socket.send(JSON.stringify({ type: "joinedRoom", roomCode:cleanRoomCode }));
 
   if (room.currentQuestion) {
+    let timeRemaining=Math.max(0, Math.floor((room.currentQuestionDeadline - Date.now()) / 1000));
     socket.send(
       JSON.stringify({
         type: "newQuestion",
@@ -65,6 +57,8 @@ function handleJoinRoom(socket, data, rooms) {
           text: room.currentQuestion.text,
           options: room.currentQuestion.options,
         },
+        deadline:room.currentQuestionDeadline,
+        duration:timeRemaining
       })
     );
   }
@@ -106,6 +100,10 @@ async function handleNextQuestion(socket, data, rooms) {
   const duration = 40 * 1000;
   room.currentQuestionDeadline = Date.now() + duration;
 
+  if (room.timeoutId) {
+    clearTimeout(room.timeoutId);
+  }
+
   room.currentQuestion = {
     id: question.id,
     correctOptionId: correctOption.id,
@@ -132,12 +130,15 @@ async function handleNextQuestion(socket, data, rooms) {
     );
   });
   
-  setTimeout(() => {
-    Object.values(room.clients).forEach((client) => {
-      if (client.readyState === 1) {
-        client.send(JSON.stringify({ type: "timeUp" }));
-      }
-    });
+  room.timeoutId = setTimeout(() => {
+    if (rooms[socket.room] && rooms[socket.room].currentQuestion && 
+        rooms[socket.room].currentQuestion.id === question.id) {
+      Object.values(rooms[socket.room].clients).forEach((client) => {
+        if (client.readyState === 1) {
+          client.send(JSON.stringify({ type: "timeUp" }));
+        }
+      });
+    }
   }, duration);
 }
 
@@ -202,6 +203,13 @@ async function handleShowLeaderboard(socket, data, rooms) {
     return;
   }
 
+  if (room.timeoutId) {
+    clearTimeout(room.timeoutId);
+    room.timeoutId = null;
+  }
+
+  room.currentQuestion=null;
+
   const leaderboard = Object.entries(room.submissions).map(([userId, sub]) => ({
     userId,
     name: sub.name,
@@ -245,6 +253,10 @@ function handleEndQuiz(socket, data, rooms) {
     return;
   }
 
+  if (room.timeoutId) {
+    clearTimeout(room.timeoutId);
+  }
+
   Object.values(room.clients).forEach((client) => {
     if (client.readyState === 1) {
       client.send(JSON.stringify({ type: "roomClosed" }));
@@ -284,10 +296,26 @@ function handleDisconnect(socket, rooms) {
     const userId = socket.userId;
     if (userId && room.clients[userId] === socket) {
       delete room.clients[userId];
+
+       const participantNames = [];
+      for (const [id, submission] of Object.entries(room.submissions)) {
+        if (room.clients[id]) {
+          participantNames.push(submission.name);
+        }
+      }
+
+      if (room.admin && room.admin.readyState === 1) {
+        room.admin.send(
+          JSON.stringify({
+            type: "participantUpdate",
+            participants: participantNames,
+          })
+        );
+      }
+
     }
   }
 }
-
 
 module.exports = {
   handleCreateRoom,
