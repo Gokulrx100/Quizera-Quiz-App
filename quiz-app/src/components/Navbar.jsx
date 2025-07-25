@@ -26,16 +26,17 @@ const Navbar = () => {
     <nav className="bg-blue-600 text-white px-6 py-3 flex justify-between items-center shadow-md">
       <a
         onClick={handleHomeClick}
-        className="text-2xl font-bold hover:text-blue-200 cursor-pointer"
+        className="text-2xl font-bold hover:text-blue-200 cursor-pointer transition-colors duration-200"
       >
         Quizera
       </a>
 
-      <div className="flex items-center space-x-9">
-        <span>Hi, {name}</span>
+      <div className="flex items-center space-x-6">
+        <span className="text-blue-100 font-medium">Hi, {name}</span>
+        
         <Link
           to="/profile"
-          className="hover:text-blue-200 transition-colors duration-200"
+          className="px-3 py-2 rounded-lg hover:bg-blue-500/50 hover:text-white transition-all duration-200 font-medium"
         >
           Profile
         </Link>
@@ -44,13 +45,13 @@ const Navbar = () => {
           <>
             <Link
               to="/create-quiz"
-              className="hover:text-blue-200 transition-colors duration-200"
+              className="px-3 py-2 rounded-lg hover:bg-blue-500/50 hover:text-white transition-all duration-200 font-medium"
             >
               Create Quiz
             </Link>
             <Link
               to="/join-quiz"
-              className="hover:text-blue-200 transition-colors duration-200"
+              className="px-3 py-2 rounded-lg hover:bg-blue-500/50 hover:text-white transition-all duration-200 font-medium"
             >
               Join Quiz
             </Link>
@@ -60,7 +61,7 @@ const Navbar = () => {
         {role === "USER" && (
           <Link
             to="/join-quiz"
-            className="hover:text-blue-200 transition-colors duration-200"
+            className="px-3 py-2 rounded-lg hover:bg-blue-500/50 hover:text-white transition-all duration-200 font-medium"
           >
             Join Quiz
           </Link>
@@ -68,7 +69,7 @@ const Navbar = () => {
 
         <button
           onClick={handleLogout}
-          className="bg-red-500 hover:bg-red-600 cursor-pointer text-white px-3 py-1 rounded transition-colors duration-200"
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-all duration-200 font-medium shadow-sm hover:shadow-md"
         >
           Logout
         </button>
