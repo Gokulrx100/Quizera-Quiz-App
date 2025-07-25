@@ -62,22 +62,22 @@ This is the backend for Quizera quiz app, providing REST API endpoints and real-
 
 ---
 
-## 📂 Project Structure
+## 📁 Project Structure
 
+```plaintext
 backend/
 ├── prisma/
-│ └── schema.prisma      # Prisma DB schema
+│   └── schema.prisma     # Prisma DB schema
 ├── routes/
-│ ├── authRoutes.js      # Authentication endpoints
-│ ├── profile.js         # Profile endpoints
-│ └── quiz.js            # Quiz endpoints
+│   ├── authRoutes.js     # Authentication endpoints
+│   ├── profile.js        # Profile endpoints
+│   └── quiz.js           # Quiz endpoints
 ├── ws/
-│ ├── wsServer.js        # WebSocket server setup
-│ └── wsHandlers.js      # WebSocket message handlers
-├── logic.js             # Main server entry point
+│   ├── wsServer.js       # WebSocket server setup
+│   └── wsHandlers.js     # WebSocket message handlers
+├── logic.js              # Main server entry point
 └── package.json
 
----
 
 ## 🔗 API Endpoints
 
