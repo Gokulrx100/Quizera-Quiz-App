@@ -1,4 +1,3 @@
-// App.jsx
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router";
 import Signup from "./pages/Signup";
 import Signin from "./pages/Signin";
@@ -10,6 +9,7 @@ import ErrorPage from "./pages/ErrorPage";
 import JoinQuiz from "./pages/JoinQuiz";
 import AdminRoom from "./pages/adminRoom";
 import { SocketProvider } from "./Contexts/SocketContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function SocketRoutesWrapper() {
   return (
@@ -26,15 +26,69 @@ function App() {
         <Route path="/" element={<Navigate to="/signup" />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/create-quiz" element={<QuizEditor mode="create" />} />
-        <Route path="/edit-quiz/:quizId" element={<QuizEditor mode="edit" />} />
-        <Route path="/join-quiz" element={<JoinQuiz />} />
+  
+        {/* Common routes */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/join-quiz"
+          element={
+            <ProtectedRoute>
+              <JoinQuiz />
+            </ProtectedRoute>
+          }
+        />
 
+        {/* Admin only */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/create-quiz"
+          element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <QuizEditor mode="create" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit-quiz/:quizId"
+          element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <QuizEditor mode="edit" />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* socket */}
         <Route element={<SocketRoutesWrapper />}>
-          <Route path="/room/:roomCode" element={<UserRoom />} />
-          <Route path="/adminroom/:quizId" element={<AdminRoom />} />
+          <Route
+            path="/room/:roomCode"
+            element={
+              <ProtectedRoute>
+                <UserRoom />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/adminroom/:quizId"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <AdminRoom />
+              </ProtectedRoute>
+            }
+          />
         </Route>
 
         <Route path="*" element={<ErrorPage />} />
