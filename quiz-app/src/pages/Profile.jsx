@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from "react";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/Common/Navbar";
+import Loading from "../components/Common/Loading";
 import axios from "axios";
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const userId = localStorage.getItem("userId");
   const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchProfile = async () => {
+      setLoading(true);
       try {
         const response = await axios.get("http://localhost:3000/profile", {
           headers: {
@@ -22,20 +25,20 @@ const Profile = () => {
       } catch (err) {
         console.log(err);
         setMessage("Failed to load profile.");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchProfile();
   }, [userId, token]);
 
-  if (!profile) {
+  if (loading || !profile) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-100">
+      <>
         <Navbar />
-        <div className="flex flex-1 items-center justify-center">
-          <p className="text-xl font-medium">{message || "Loading..."}</p>
-        </div>
-      </div>
+        <Loading message={message || "Loading your profile..."} />;
+      </>
     );
   }
 
@@ -45,7 +48,9 @@ const Profile = () => {
 
       <div className="flex flex-1 items-center justify-center">
         <div className="bg-white shadow-xl rounded-2xl p-10 w-full max-w-lg">
-          <h2 className="text-3xl font-semibold mb-8 text-center">Your Profile</h2>
+          <h2 className="text-3xl font-semibold mb-8 text-center">
+            Your Profile
+          </h2>
 
           <p className="mb-4 text-lg text-center">
             <strong>Name:</strong> {profile.name}

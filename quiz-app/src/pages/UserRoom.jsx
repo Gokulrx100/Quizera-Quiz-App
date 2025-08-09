@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import Navbar from "../components/Navbar";
-import RoomHeader from "../components/RoomHeader";
-import QuizTimer from "../components/QuizTimer";
-import QuestionCard from "../components/QuestionCard";
-import UserLeaderboard from "../components/UserLeaderboard";
+import Navbar from "../components/Common/Navbar";
+import RoomHeader from "../components/UserRoom/RoomHeader";
+import QuizTimer from "../components/UserRoom/QuizTimer";
+import QuestionCard from "../components/UserRoom/QuestionCard";
+import UserLeaderboard from "../components/UserRoom/UserLeaderboard";
 import { useSocket } from "../Contexts/SocketContext";
 
 const UserRoom = () => {
@@ -23,7 +23,6 @@ const UserRoom = () => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
 
-  // Socket logic stays in UserRoom
   useEffect(() => {
     const userId = localStorage.getItem("userId");
     const name = localStorage.getItem("name");

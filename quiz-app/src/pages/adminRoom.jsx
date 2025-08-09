@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useSocket } from "../Contexts/SocketContext";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/Common/Navbar";
 import ParticipantsList from "../components/AdminRoom/ParticipantsList";
 import QuestionSection from "../components/AdminRoom/QuestionSection";
+import Loading from "../components/Common/Loading";
 import axios from "axios";
 
 const AdminRoom = () => {
@@ -16,6 +17,7 @@ const AdminRoom = () => {
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [loading, setLoading] = useState(true);
   const roomCreatedRef = useRef(false);
 
   useEffect(() => {
@@ -58,6 +60,7 @@ const AdminRoom = () => {
 
   useEffect(() => {
     const fetchQuestions = async () => {
+      setLoading(true);
       try {
         const token = localStorage.getItem("token");
         const res = await axios.get(`http://localhost:3000/quiz/${quizId}`, {
@@ -67,6 +70,8 @@ const AdminRoom = () => {
       } catch (err) {
         console.error(err);
         alert("Failed to fetch questions");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -90,6 +95,10 @@ const AdminRoom = () => {
   const handleEndQuiz = () => {
     safeSend({ type: "endQuiz" });
   };
+
+  if (loading) {
+    return <Loading message="Setting up quiz room..." />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
