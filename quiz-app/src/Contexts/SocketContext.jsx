@@ -2,9 +2,9 @@ import React, { createContext, useContext, useRef } from "react";
 
 const SocketContext = createContext(null);
 
-export const useSocket = () => useContext(SocketContext);
+const useSocket = () => useContext(SocketContext);
 
-export const SocketProvider = ({ children }) => {
+const SocketProvider = ({ children }) => {
   const socketRef = useRef(null);
   const queue = useRef([]);
 
@@ -37,3 +37,8 @@ export const SocketProvider = ({ children }) => {
     </SocketContext.Provider>
   );
 };
+
+export {
+  SocketProvider,
+  useSocket
+}

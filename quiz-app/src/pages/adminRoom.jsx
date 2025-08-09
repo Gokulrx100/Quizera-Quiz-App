@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useSocket } from "../Contexts/SocketContext";
 import Navbar from "../components/Navbar";
@@ -13,8 +13,8 @@ const AdminRoom = () => {
   const [participants, setParticipants] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
-  const [roomCreated, setRoomCreated] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
+  const roomCreatedRef = useRef(false);
 
   useEffect(() => {
     const socket = socketRef.current;
@@ -22,9 +22,9 @@ const AdminRoom = () => {
       return;
     }
 
-    if (!roomCreated) {
+    if (!roomCreatedRef.current) {
       safeSend({ type: "createRoom", quizId: quizId });
-      setRoomCreated(true);
+      roomCreatedRef.current = true;
     }
 
     socket.onmessage = (event) => {
@@ -56,7 +56,7 @@ const AdminRoom = () => {
     };
 
     return () => {};
-  }, [socketRef, safeSend, roomCreated, quizId, navigate]);
+  }, [socketRef, safeSend, quizId, navigate]);
 
   useEffect(() => {
     const fetchQuestions = async () => {
