@@ -1,13 +1,17 @@
 import React from "react";
 
-const Leaderboard = ({ leaderboard }) => (
-  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-gray-200/50">
+const Leaderboard = ({ 
+  leaderboard, 
+  title = "Final Leaderboard", 
+  maxWidth = false 
+}) => (
+  <div className={`bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-gray-200/50 ${maxWidth ? 'w-full max-w-2xl' : ''}`}>
     <div className="flex items-center gap-2 mb-4">
       <div className="w-8 h-8 rounded-full bg-yellow-500 text-white text-sm font-bold flex items-center justify-center">
         🏆
       </div>
       <h3 className="text-xl font-bold text-gray-800">
-        Final Leaderboard
+        {title}
       </h3>
     </div>
 

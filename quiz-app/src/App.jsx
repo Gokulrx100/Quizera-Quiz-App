@@ -8,6 +8,7 @@ import QuizEditor from "./pages/QuizEditor";
 import ErrorPage from "./pages/ErrorPage";
 import JoinQuiz from "./pages/JoinQuiz";
 import AdminRoom from "./pages/adminRoom";
+import Landing from './pages/LandingPage';
 import { SocketProvider } from "./Contexts/SocketContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -23,7 +24,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/signup" />} />
+        <Route path="/" element={<Landing />} />        
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
   

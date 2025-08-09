@@ -1,8 +1,8 @@
 import React from "react";
-import Leaderboard from "./Leaderboard";
+import Leaderboard from "../Common/Leaderboard";
 import QuestionCard from "./QuestionCard";
 
-const QuestionSection = ({ 
+const QuestionsSection = ({ 
   leaderboard, 
   questions, 
   currentIndex, 
@@ -12,7 +12,11 @@ const QuestionSection = ({
     <h3 className="text-lg font-semibold mb-4">Questions</h3>
 
     {leaderboard.length > 0 ? (
-      <Leaderboard leaderboard={leaderboard} />
+      <Leaderboard 
+        leaderboard={leaderboard} 
+        title="Final Leaderboard"
+        maxWidth={false}
+      />
     ) : (
       <div className="space-y-4">
         {questions.map((q, idx) => (
@@ -39,4 +43,4 @@ const QuestionSection = ({
   </div>
 );
 
-export default QuestionSection;
+export default QuestionsSection;

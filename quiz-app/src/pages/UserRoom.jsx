@@ -4,7 +4,7 @@ import Navbar from "../components/Common/Navbar";
 import RoomHeader from "../components/UserRoom/RoomHeader";
 import QuizTimer from "../components/UserRoom/QuizTimer";
 import QuestionCard from "../components/UserRoom/QuestionCard";
-import UserLeaderboard from "../components/UserRoom/UserLeaderboard";
+import Leaderboard from "../components/Common/Leaderboard";
 import { useSocket } from "../Contexts/SocketContext";
 
 const UserRoom = () => {
@@ -148,7 +148,11 @@ const UserRoom = () => {
         <RoomHeader roomCode={roomCode} message={message} score={score} />
 
         {leaderboard.length > 0 ? (
-          <UserLeaderboard leaderboard={leaderboard} />
+          <Leaderboard
+            leaderboard={leaderboard}
+            title="Final Results"
+            maxWidth={true}
+          />
         ) : (
           <>
             {currentQuestion && (
