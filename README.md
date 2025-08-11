@@ -1,29 +1,12 @@
-# 🎯 Quizera - Real-time Quiz Platform
-
 <div align="center">
 
-<!-- Hero SVG -->
-<svg width="400" height="120" viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#dbeafe"/>
-      <stop offset="100%" style="stop-color:#e0e7ff"/>
-    </linearGradient>
-  </defs>
-  <rect width="400" height="120" fill="url(#bg)" rx="10"/>
-  <text x="200" y="50" font-family="Arial" font-size="32" font-weight="bold" text-anchor="middle" fill="blue">Quizera </text>
-  <text x="200" y="75" font-family="Arial" font-size="14" text-anchor="middle" fill="#6b7280">Interactive Real-time Quiz Platform</text>
-  
-  <!-- Feature Icons -->
-</svg>
+# 🎯 Quizera - Real-time Quiz Platform
 
 [![React](https://img.shields.io/badge/React-61dafb?style=flat&logo=react&logoColor=white)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![WebSocket](https://img.shields.io/badge/WebSocket-00A1B0?style=flat&logo=websocket&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
 
 </div>
-
----
 
 ## 📖 Table of Contents
 
