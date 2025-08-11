@@ -723,18 +723,10 @@ npx prisma generate
 
 ---
 
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
----
-
 <div align="center">
 
 **🎯 Built with passion for interactive learning and real-time collaboration**
 
-[⭐ Star this repo](https://github.com/yourusername/quizera) • [🐛 Report Bug](https://github.com/yourusername/quizera/issues) • [💡 Request Feature](https://github.com/yourusername/quizera/issues)
-
-**Made with ❤️ using React, WebSocket, and modern web technologies**
+[⭐ Star this repo](https://github.com/Gokulrx100/Quizera-Quiz-App) • [🐛 Report Bug](https://github.com/Gokulrx100/Quizera-Quiz-App/issues) • [💡 Request Feature](https://github.com/Gokulrx100/Quizera-Quiz-App/issues)
 
 </div>
