@@ -727,6 +727,8 @@ npx prisma generate
 
 **🎯 Built with passion for interactive learning and real-time collaboration**
 
-[⭐ Star this repo](https://github.com/Gokulrx100/Quizera-Quiz-App) • [🐛 Report Bug](https://github.com/Gokulrx100/Quizera-Quiz-App/issues) • [💡 Request Feature](https://github.com/Gokulrx100/Quizera-Quiz-App/issues)
+• [⭐ Star this repo](https://github.com/Gokulrx100/Quizera-Quiz-App) 
+• [🐛 Report Bug](https://github.com/Gokulrx100/Quizera-Quiz-App/issues) 
+• [💡 Request Feature](https://github.com/Gokulrx100/Quizera-Quiz-App/issues)
 
 </div>
