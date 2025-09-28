@@ -6,7 +6,6 @@ const useSocket = () => useContext(SocketContext);
 
 const SocketProvider = ({ children }) => {
   const socketRef = useRef(null);
-  const queue = useRef([]);
 
   if (!socketRef.current) {
     const socket = new WebSocket("ws://localhost:3000/");
@@ -14,31 +13,33 @@ const SocketProvider = ({ children }) => {
 
     socket.onopen = () => {
       console.log("[Socket] Connected");
-      queue.current.forEach((msg) => socket.send(JSON.stringify(msg)));
-      queue.current = [];
     };
 
-    socket.onclose = () => console.log("[Socket] Disconnected");
+    socket.onclose = () => {
+      console.log("[Socket] Disconnected");
+    };
+
+    socket.onerror = (error) => {
+      console.error("[Socket] Error:", error);
+    };
   }
 
-  const safeSend = (msg) => {
+  const send = (msg) => {
     const socket = socketRef.current;
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(msg));
+      return true;
     } else {
-      console.log("[Socket] Queued message until open");
-      queue.current.push(msg);
+      console.warn("[Socket] Cannot send - connection not ready");
+      return false;
     }
   };
 
   return (
-    <SocketContext.Provider value={{ socketRef, safeSend }}>
+    <SocketContext.Provider value={{ socketRef, send }}>
       {children}
     </SocketContext.Provider>
   );
 };
 
-export {
-  SocketProvider,
-  useSocket
-}
+export { SocketProvider, useSocket };

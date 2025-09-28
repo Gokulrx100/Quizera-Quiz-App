@@ -9,7 +9,7 @@ import axios from "axios";
 
 const AdminRoom = () => {
   const navigate = useNavigate();
-  const { socketRef, safeSend } = useSocket();
+  const { socketRef, send } = useSocket(); 
   const { quizId } = useParams();
 
   const [roomCode, setRoomCode] = useState("");
@@ -26,9 +26,20 @@ const AdminRoom = () => {
       return;
     }
 
-    if (!roomCreatedRef.current) {
-      safeSend({ type: "createRoom", quizId: quizId });
-      roomCreatedRef.current = true;
+    const handleSocketReady = () => {
+      if (!roomCreatedRef.current && socket.readyState === WebSocket.OPEN) {
+        console.log("[AdminRoom] Creating room for quiz:", quizId);
+        const success = send({ type: "createRoom", quizId: quizId });
+        if (success) {
+          roomCreatedRef.current = true;
+        }
+      }
+    };
+
+    if (socket.readyState === WebSocket.OPEN) {
+      handleSocketReady();
+    } else {
+      socket.addEventListener('open', handleSocketReady);
     }
 
     socket.onmessage = (event) => {
@@ -38,7 +49,7 @@ const AdminRoom = () => {
       switch (data.type) {
         case "roomCreated":
           setRoomCode(data.roomCode);
-          console.log("roomCreated : ", data.roomCode);
+          console.log("Room created with code:", data.roomCode);
           break;
         case "participantUpdate":
           setParticipants(data.participants);
@@ -55,8 +66,10 @@ const AdminRoom = () => {
       }
     };
 
-    return () => {};
-  }, [socketRef, safeSend, quizId, navigate]);
+    return () => {
+      socket.removeEventListener('open', handleSocketReady);
+    };
+  }, [socketRef, send, quizId, navigate]);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -82,18 +95,26 @@ const AdminRoom = () => {
     if (currentIndex + 1 < questions.length) {
       const nextIndex = currentIndex + 1;
       const nextQuestion = questions[nextIndex];
-      safeSend({
+      const success = send({
         type: "nextQuestion",
         questionId: nextQuestion.id,
       });
-      setCurrentIndex(nextIndex);
+      
+      if (success) {
+        setCurrentIndex(nextIndex);
+      } else {
+        alert("Connection lost. Please refresh the page.");
+      }
     } else {
-      safeSend({ type: "showLeaderboard" });
+      send({ type: "showLeaderboard" });
     }
   };
 
   const handleEndQuiz = () => {
-    safeSend({ type: "endQuiz" });
+    const success = send({ type: "endQuiz" });
+    if (!success) {
+      alert("Connection lost. Please refresh the page.");
+    }
   };
 
   if (loading) {

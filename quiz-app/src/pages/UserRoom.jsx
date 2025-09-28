@@ -10,7 +10,7 @@ import { useSocket } from "../Contexts/SocketContext";
 const UserRoom = () => {
   const { roomCode } = useParams();
   const navigate = useNavigate();
-  const { socketRef, safeSend } = useSocket();
+  const { socketRef, send } = useSocket(); 
 
   const [message, setMessage] = useState("Connecting to room...");
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -38,12 +38,25 @@ const UserRoom = () => {
 
     console.log("[Room] Connecting with:", { userId, name });
 
-    safeSend({
-      type: "joinRoom",
-      roomCode: roomCode.trim(),
-      name,
-      userId,
-    });
+    const joinRoom = () => {
+      const success = send({
+        type: "joinRoom",
+        roomCode: roomCode.trim(),
+        name,
+        userId,
+      });
+
+      if (!success) {
+        setMessage("Failed to connect. Retrying...");
+        setTimeout(joinRoom, 1000);
+      }
+    };
+
+    if (socket.readyState === WebSocket.OPEN) {
+      joinRoom();
+    } else {
+      socket.addEventListener("open", joinRoom);
+    }
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
@@ -95,7 +108,11 @@ const UserRoom = () => {
           console.warn("Unknown:", data);
       }
     };
-  }, [socketRef, roomCode, navigate, safeSend]);
+
+    return () => {
+      socket.removeEventListener("open", joinRoom);
+    };
+  }, [socketRef, roomCode, navigate, send]);
 
   useEffect(() => {
     if (timeLeft > 0 && !hasSubmitted && !isTimeUp) {
@@ -115,12 +132,18 @@ const UserRoom = () => {
 
   const submitAnswer = () => {
     if (!selectedOption || isTimeUp || hasSubmitted) return;
-    safeSend({
+
+    const success = send({
       type: "submitAnswer",
       questionId: currentQuestion.id,
       selectedOption,
     });
-    setHasSubmitted(true);
+
+    if (success) {
+      setHasSubmitted(true);
+    } else {
+      setMessage("Connection lost. Please refresh and rejoin.");
+    }
   };
 
   const isDisabled = isTimeUp || hasSubmitted;
